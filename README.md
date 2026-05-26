@@ -1,0 +1,50 @@
+# Solana Memecoin Screener 2.0
+
+Evidence-based Solana memecoin screener with risk/opportunity scoring, hard avoid rules, Telegram approvals, watchlist tracking, and operations dashboard.
+
+## What this system does
+- Scans candidate Solana tokens from multiple data sources with fallback.
+- Scores each token for risk and opportunity.
+- Applies hard avoid rules for obvious high-risk patterns.
+- Sends Telegram alerts for candidates that pass filters.
+- Supports manual approval/rejection from Telegram and API.
+- Maintains watchlist, alert history, source health, and scan evidence.
+
+## What this system does NOT do (v1)
+- No live trading.
+- No private key handling.
+- No seed phrase handling.
+- No auto buy/sell execution.
+
+## Quick start
+1. Install dependencies:
+   - `npm install`
+2. Copy env template:
+   - `Copy-Item .env.example .env`
+3. Update `.env` values (especially Telegram settings).
+4. Start dev server:
+   - `npm run dev`
+5. Open dashboard:
+   - `http://localhost:8787/dashboard`
+
+## Scripts
+- `npm run dev` - run API in watch mode
+- `npm run build` - compile TypeScript
+- `npm run start` - run compiled app
+- `npm run test` - run Vitest tests
+- `npm run audit:env` - validate environment and print safe runtime summary
+
+## Key API endpoints
+- `GET /health`
+- `GET /status/sources`
+- `POST /scan/run`
+- `GET /tokens?decision=alert|watch|avoid`
+- `GET /alerts`
+- `GET /watchlist`
+- `POST /watchlist`
+- `POST /alerts/:id/approve`
+- `POST /alerts/:id/reject`
+- `GET /dashboard-data`
+
+## Deployment
+See `docs/DEPLOYMENT_RUNBOOK.md` for VPS/Railway/Render/Oracle Free deployment paths.

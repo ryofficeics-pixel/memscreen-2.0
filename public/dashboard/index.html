@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memscreen 2.0</title>
+    <link rel="stylesheet" href="/dashboard/styles.css" />
+  </head>
+  <body>
+    <header class="top-nav">
+      <div class="container nav-row">
+        <div class="brand">MEMSCREEN 2.0</div>
+        <div class="nav-actions">
+          <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+          <button id="scanBtn" class="btn btn-primary">Run Scan</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">Evidence-based Solana screener</p>
+          <h1>Filter noise. Track momentum. Keep manual control.</h1>
+          <p>
+            Alerts are watch-and-confirm only. No auto-trading, no private keys, no guaranteed profit claims.
+          </p>
+        </div>
+        <div class="terminal-grid">
+          <div class="terminal-pane">status /health<br />ok: true</div>
+          <div class="terminal-pane">source fallback<br />birdeye -> dexscreener</div>
+          <div class="terminal-pane">decision labels<br />alert | watch | avoid</div>
+          <div class="terminal-pane">approval path<br />telegram + dashboard</div>
+        </div>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="card kpi-card">
+          <h3>Tokens Tracked</h3>
+          <p id="kpiTokens">-</p>
+        </article>
+        <article class="card kpi-card">
+          <h3>Watching</h3>
+          <p id="kpiWatching">-</p>
+        </article>
+        <article class="card kpi-card">
+          <h3>New Alerts</h3>
+          <p id="kpiAlerts">-</p>
+        </article>
+      </section>
+
+      <section class="panel-grid">
+        <article class="card">
+          <h2>Source Status</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>OK</th>
+                  <th>Latency</th>
+                  <th>Tokens</th>
+                </tr>
+              </thead>
+              <tbody id="sourceBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Recent Alerts</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Token</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="alertBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>Top Candidates</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Address</th>
+                <th>Decision</th>
+                <th>Risk</th>
+                <th>Opportunity</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody id="tokenBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/dashboard/main.js"></script>
+  </body>
+</html>
