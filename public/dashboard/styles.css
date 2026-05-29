@@ -116,6 +116,18 @@ body {
   margin-bottom: 14px !important;
 }
 
+.status-line {
+  margin-top: 12px !important;
+  color: #9db1ff;
+  font-size: 14px;
+}
+
+.error-line {
+  color: var(--error);
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
 .terminal-grid {
   margin-top: 24px;
   background: var(--canvas-deep);

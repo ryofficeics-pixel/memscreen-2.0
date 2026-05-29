@@ -23,6 +23,10 @@ export class ScreenerService {
     return sources;
   }
 
+  getConfiguredSourceNames(): string[] {
+    return this.buildSources().map((source) => source.name);
+  }
+
   async runScan(): Promise<{ summary: ScanSummary; screened: ScreenedToken[] }> {
     const runId = `scan-${Date.now()}`;
     const { candidates, statuses } = await gatherFromSources(this.buildSources(), this.env.DEXSCREENER_MAX_TOKENS);

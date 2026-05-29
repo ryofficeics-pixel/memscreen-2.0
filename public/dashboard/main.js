@@ -8,6 +8,8 @@ const kpiAlerts = document.getElementById("kpiAlerts");
 const sourceBody = document.getElementById("sourceBody");
 const alertBody = document.getElementById("alertBody");
 const tokenBody = document.getElementById("tokenBody");
+const statusLine = document.getElementById("statusLine");
+const errorLine = document.getElementById("errorLine");
 
 function decisionPill(decision) {
   const cls = decision === "alert" ? "pill-alert" : decision === "watch" ? "pill-watch" : "pill-avoid";
@@ -92,17 +94,24 @@ function renderTokens(items) {
 }
 
 async function loadData() {
-  const resp = await fetch("/dashboard-data");
-  if (!resp.ok) throw new Error(`dashboard-data ${resp.status}`);
-  const data = await resp.json();
+  const [dashboardResp, statusResp] = await Promise.all([fetch("/dashboard-data"), fetch("/api/status")]);
+  if (!dashboardResp.ok) throw new Error(`dashboard-data ${dashboardResp.status}`);
+  if (!statusResp.ok) throw new Error(`api-status ${statusResp.status}`);
+  const data = await dashboardResp.json();
+  const statusData = await statusResp.json();
 
   kpiTokens.textContent = String(data.totals.tokensTracked ?? 0);
   kpiWatching.textContent = String(data.totals.watching ?? 0);
   kpiAlerts.textContent = String(data.totals.alertsNew ?? 0);
+  statusLine.textContent = `Service: ${statusData.ok ? "ok" : "degraded"} | Scheduler: ${
+    statusData.scheduler?.enabled ? "enabled" : "disabled"
+  } | Telegram: ${statusData.telegram?.configured ? "configured" : "not configured"}`;
 
   renderSources(data.recentSources || []);
   renderAlerts(data.recentAlerts || []);
   renderTokens(data.topCandidates || []);
+  errorLine.hidden = true;
+  errorLine.textContent = "";
 }
 
 refreshBtn.addEventListener("click", async () => {
@@ -128,4 +137,6 @@ scanBtn.addEventListener("click", async () => {
 
 loadData().catch((error) => {
   console.error(error);
+  errorLine.hidden = false;
+  errorLine.textContent = `Failed to load dashboard data: ${error.message}`;
 });

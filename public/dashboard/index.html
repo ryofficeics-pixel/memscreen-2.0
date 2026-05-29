@@ -26,6 +26,7 @@
           <p>
             Alerts are watch-and-confirm only. No auto-trading, no private keys, no guaranteed profit claims.
           </p>
+          <p id="statusLine" class="status-line">Loading status...</p>
         </div>
         <div class="terminal-grid">
           <div class="terminal-pane">status /health<br />ok: true</div>
@@ -88,6 +89,7 @@
 
       <section class="card">
         <h2>Top Candidates</h2>
+        <p id="errorLine" class="error-line" hidden></p>
         <div class="table-wrap">
           <table>
             <thead>

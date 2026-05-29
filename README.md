@@ -31,13 +31,22 @@ Evidence-based Solana memecoin screener with risk/opportunity scoring, hard avoi
 - `npm run dev` - run API in watch mode
 - `npm run build` - compile TypeScript
 - `npm run start` - run compiled app
+- `npm run lint` - run ESLint
+- `npm run init:db` - idempotent SQLite schema init
+- `npm run check:env` - validate required env and warn on optional unset vars
+- `npm run check:health` - validate key local endpoints (requires running app)
+- `npm run audit` - repository readiness checks
 - `npm run test` - run Vitest tests
 - `npm run audit:env` - validate environment and print safe runtime summary
 
 ## Key API endpoints
 - `GET /health`
+- `GET /api/health`
+- `GET /api/status`
 - `GET /status/sources`
 - `POST /scan/run`
+- `POST /api/scan/run`
+- `POST /api/analyze`
 - `GET /tokens?decision=alert|watch|avoid`
 - `GET /alerts`
 - `GET /watchlist`
@@ -45,6 +54,7 @@ Evidence-based Solana memecoin screener with risk/opportunity scoring, hard avoi
 - `POST /alerts/:id/approve`
 - `POST /alerts/:id/reject`
 - `GET /dashboard-data`
+- `GET /dashboard`
 
 ## Deployment
 See `docs/DEPLOYMENT_RUNBOOK.md` for VPS/Railway/Render/Oracle Free deployment paths.

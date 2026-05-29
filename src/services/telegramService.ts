@@ -25,6 +25,7 @@ export class TelegramService {
     this.bot.use(async (ctx, next) => {
       const chatId = String(ctx.chat?.id ?? "");
       if (this.env.allowedChatIds.size > 0 && !this.env.allowedChatIds.has(chatId)) {
+        console.warn(`Telegram unauthorized chat attempt: ${chatId}`);
         await ctx.reply("Unauthorized chat.");
         return;
       }
@@ -61,7 +62,12 @@ export class TelegramService {
       await ctx.reply("Rejection recorded.");
     });
 
-    await this.bot.launch();
+    try {
+      await this.bot.launch();
+    } catch (error) {
+      console.error("Telegram launch failed. API remains active.", error);
+      this.bot = null;
+    }
   }
 
   async stop() {
@@ -90,7 +96,11 @@ export class TelegramService {
     if (this.bot && this.env.TELEGRAM_DEFAULT_CHAT_ID) {
       const chatId = this.env.TELEGRAM_DEFAULT_CHAT_ID;
       if (this.env.allowedChatIds.size === 0 || this.env.allowedChatIds.has(chatId)) {
-        await this.bot.telegram.sendMessage(chatId, `${msg}\nAlert ID: ${alertId}`);
+        try {
+          await this.bot.telegram.sendMessage(chatId, `${msg}\nAlert ID: ${alertId}`);
+        } catch (error) {
+          console.error("Telegram send failed", error);
+        }
       }
     }
 

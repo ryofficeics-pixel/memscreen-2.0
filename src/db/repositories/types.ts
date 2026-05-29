@@ -31,11 +31,38 @@ export interface DashboardSnapshot {
   recentSources: SourceStatus[];
 }
 
+export interface SourceHealthSnapshot {
+  name: string;
+  enabled: boolean;
+  lastSuccessAt: string | null;
+  lastFailureAt: string | null;
+  lastLatencyMs: number;
+  lastError: string | null;
+}
+
+export interface AnalysisReportRecord {
+  id: number;
+  mint: string;
+  decision: TokenDecision;
+  riskScore: number;
+  opportunityScore: number;
+  confidence: number;
+  summary: string;
+  warnings: string[];
+  positives: string[];
+  evidence: string[];
+  sources: string[];
+  createdAt: string;
+}
+
 export interface StorageRepository {
   init(): void;
+  dbHealthCheck(): { ok: boolean; details: string };
   upsertToken(token: ScreenedToken): void;
   saveScan(summary: ScanSummary): void;
   recordSourceStatuses(statuses: SourceStatus[]): void;
+  saveAnalysisReport(report: Omit<AnalysisReportRecord, "id" | "createdAt">): AnalysisReportRecord;
+  saveSetting(key: string, value: string): void;
   listTokens(limit: number, decision?: TokenDecision): ScreenedToken[];
   upsertWatchlist(address: string, notes: string): WatchlistEntry;
   updateWatchlistStatus(address: string, status: "watching" | "approved" | "rejected"): void;
@@ -46,4 +73,6 @@ export interface StorageRepository {
   recordApproval(alertId: number, chatId: string, username: string, action: "approve" | "reject"): void;
   getDashboardSnapshot(): DashboardSnapshot;
   listSourceStatuses(limit: number): SourceStatus[];
+  getSourceHealth(sourceNames: string[]): SourceHealthSnapshot[];
+  getTableCounts(tableNames: string[]): Record<string, number>;
 }

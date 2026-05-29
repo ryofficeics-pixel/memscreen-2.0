@@ -18,14 +18,23 @@
    - `TELEGRAM_ALLOWED_CHAT_IDS`
    - `TELEGRAM_DEFAULT_CHAT_ID`
    - `BIRDEYE_API_KEY`
+   - `HELIUS_API_KEY`
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Local Start
 1. `npm install`
-2. `npm run dev`
-3. Verify:
+2. `npm run check:env`
+3. `npm run init:db`
+4. `npm run dev`
+5. Verify:
    - `GET /health`
+   - `GET /api/health`
+   - `GET /api/status`
    - `GET /dashboard`
    - `POST /scan/run`
+   - `POST /api/analyze`
 
 ## VPS (systemd)
 1. Install Node.js 20+.
@@ -42,7 +51,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/solana-screener
-ExecStart=/usr/bin/node dist/index.js
+ExecStart=/usr/bin/node dist/src/index.js
 Restart=always
 RestartSec=5
 EnvironmentFile=/opt/solana-screener/.env
@@ -80,6 +89,8 @@ WantedBy=multi-user.target
 
 ## Observability checklist
 - `/health` must be green.
+- `/api/health` must be green.
+- `/api/status` must return database/scheduler/source metadata.
 - `/status/sources` should show recent source checks and latency.
 - `alerts` and `approvals` tables must be writable.
 - Telegram bot should only respond to allowed chat IDs when configured.

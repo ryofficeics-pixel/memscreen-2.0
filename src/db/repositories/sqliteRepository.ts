@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { ScanSummary, ScreenedToken, SourceStatus, TokenDecision } from "../../domain/types.js";
-import { StorageRepository, WatchlistEntry } from "./types.js";
+import { AnalysisReportRecord, SourceHealthSnapshot, StorageRepository, WatchlistEntry } from "./types.js";
 
 function normalizeDbPath(raw: string): string {
   return raw.startsWith("sqlite://") ? raw.replace("sqlite://", "") : raw;
@@ -105,7 +105,55 @@ export class SQLiteRepository implements StorageRepository {
         action TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mint TEXT NOT NULL,
+        decision TEXT NOT NULL,
+        risk_score REAL NOT NULL,
+        opportunity_score REAL NOT NULL,
+        confidence REAL NOT NULL,
+        summary TEXT NOT NULL,
+        warnings_json TEXT NOT NULL,
+        positives_json TEXT NOT NULL,
+        evidence_json TEXT NOT NULL,
+        sources_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        kind TEXT NOT NULL,
+        ref_id TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS source_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source_name TEXT NOT NULL,
+        ok INTEGER NOT NULL,
+        latency_ms INTEGER NOT NULL,
+        error_message TEXT,
+        payload_json TEXT NOT NULL,
+        checked_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
     `);
+  }
+
+  dbHealthCheck(): { ok: boolean; details: string } {
+    try {
+      this.db.prepare("SELECT 1").get();
+      return { ok: true, details: "sqlite_ok" };
+    } catch (error) {
+      return { ok: false, details: error instanceof Error ? error.message : "sqlite_health_error" };
+    }
   }
 
   upsertToken(token: ScreenedToken): void {
@@ -187,18 +235,80 @@ export class SQLiteRepository implements StorageRepository {
         summary.avoidCount,
         JSON.stringify(summary.sourceStatuses)
       );
+
+    this.db
+      .prepare("INSERT INTO snapshots (kind,ref_id,payload_json,created_at) VALUES (?,?,?,?)")
+      .run("scan_summary", summary.runId, JSON.stringify(summary), nowIso());
   }
 
   recordSourceStatuses(statuses: SourceStatus[]): void {
     const stmt = this.db.prepare(
       "INSERT INTO source_status (source_name,ok,latency_ms,error_message,token_count,checked_at) VALUES (?,?,?,?,?,?)"
     );
+    const stmtLog = this.db.prepare(
+      "INSERT INTO source_logs (source_name,ok,latency_ms,error_message,payload_json,checked_at) VALUES (?,?,?,?,?,?)"
+    );
     const tx = this.db.transaction((rows: SourceStatus[]) => {
       for (const s of rows) {
         stmt.run(s.sourceName, s.ok ? 1 : 0, s.latencyMs, s.errorMessage ?? null, s.tokenCount, s.checkedAt);
+        stmtLog.run(
+          s.sourceName,
+          s.ok ? 1 : 0,
+          s.latencyMs,
+          s.errorMessage ?? null,
+          JSON.stringify(s),
+          s.checkedAt
+        );
       }
     });
     tx(statuses);
+  }
+
+  saveAnalysisReport(report: Omit<AnalysisReportRecord, "id" | "createdAt">): AnalysisReportRecord {
+    const createdAt = nowIso();
+    const result = this.db
+      .prepare(
+        `INSERT INTO reports
+         (mint,decision,risk_score,opportunity_score,confidence,summary,warnings_json,positives_json,evidence_json,sources_json,created_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+      )
+      .run(
+        report.mint,
+        report.decision,
+        report.riskScore,
+        report.opportunityScore,
+        report.confidence,
+        report.summary,
+        JSON.stringify(report.warnings),
+        JSON.stringify(report.positives),
+        JSON.stringify(report.evidence),
+        JSON.stringify(report.sources),
+        createdAt
+      );
+
+    const id = Number(result.lastInsertRowid);
+    return {
+      id,
+      mint: report.mint,
+      decision: report.decision,
+      riskScore: report.riskScore,
+      opportunityScore: report.opportunityScore,
+      confidence: report.confidence,
+      summary: report.summary,
+      warnings: report.warnings,
+      positives: report.positives,
+      evidence: report.evidence,
+      sources: report.sources,
+      createdAt
+    };
+  }
+
+  saveSetting(key: string, value: string): void {
+    this.db
+      .prepare(
+        "INSERT INTO settings (key,value,updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at"
+      )
+      .run(key, value, nowIso());
   }
 
   listTokens(limit: number, decision?: TokenDecision): ScreenedToken[] {
@@ -303,6 +413,42 @@ export class SQLiteRepository implements StorageRepository {
       tokenCount: Number(row.token_count),
       checkedAt: String(row.checked_at)
     }));
+  }
+
+  getSourceHealth(sourceNames: string[]): SourceHealthSnapshot[] {
+    return sourceNames.map((name) => {
+      const last = this.db
+        .prepare(
+          "SELECT source_name, ok, latency_ms, error_message, checked_at FROM source_logs WHERE source_name = ? ORDER BY checked_at DESC LIMIT 1"
+        )
+        .get(name) as Record<string, unknown> | undefined;
+
+      const lastSuccess = this.db
+        .prepare("SELECT checked_at FROM source_logs WHERE source_name = ? AND ok = 1 ORDER BY checked_at DESC LIMIT 1")
+        .get(name) as { checked_at: string } | undefined;
+
+      const lastFailure = this.db
+        .prepare("SELECT checked_at FROM source_logs WHERE source_name = ? AND ok = 0 ORDER BY checked_at DESC LIMIT 1")
+        .get(name) as { checked_at: string } | undefined;
+
+      return {
+        name,
+        enabled: true,
+        lastSuccessAt: lastSuccess?.checked_at ?? null,
+        lastFailureAt: lastFailure?.checked_at ?? null,
+        lastLatencyMs: Number(last?.latency_ms ?? 0),
+        lastError: last?.error_message ? String(last.error_message) : null
+      };
+    });
+  }
+
+  getTableCounts(tableNames: string[]): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const tableName of tableNames) {
+      const row = this.db.prepare(`SELECT COUNT(*) AS c FROM ${tableName}`).get() as { c: number };
+      counts[tableName] = Number(row.c ?? 0);
+    }
+    return counts;
   }
 
   private rowToWatchlist(row: Record<string, unknown>): WatchlistEntry {

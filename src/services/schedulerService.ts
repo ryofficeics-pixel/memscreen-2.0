@@ -33,6 +33,15 @@ export class SchedulerService {
     }
   }
 
+  getState() {
+    return {
+      enabled: this.env.ENABLE_AUTO_SCAN,
+      intervalSec: this.env.SCAN_INTERVAL_SEC,
+      running: this.timer !== null,
+      cycleInProgress: this.running
+    };
+  }
+
   private async runCycle() {
     if (this.running) {
       this.logger.warn("Skipping scan cycle: previous cycle still running");
