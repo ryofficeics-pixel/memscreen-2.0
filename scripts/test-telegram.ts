@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
 function isTrue(value: string | undefined) {
   return String(value ?? "").trim().toLowerCase() === "true";
 }
