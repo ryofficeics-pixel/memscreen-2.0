@@ -58,3 +58,6 @@ Evidence-based Solana memecoin screener with risk/opportunity scoring, hard avoi
 
 ## Deployment
 See `docs/DEPLOYMENT_RUNBOOK.md` for VPS/Railway/Render/Oracle Free deployment paths.
+
+## Moving computers
+See `NEW_COMPUTER_HANDOFF.md` for the full checklist to clone, restore `.env`, initialize the local database, verify the app, and keep secrets outside git.
