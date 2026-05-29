@@ -14,6 +14,7 @@
     "init:db": "tsx scripts/init-db.ts",
     "check:env": "tsx scripts/check-env.ts",
     "check:health": "tsx scripts/check-health.ts",
+    "test:telegram": "tsx scripts/test-telegram.ts",
     "audit": "tsx scripts/audit.ts",
     "test": "vitest run",
     "audit:env": "tsx scripts/audit-env.ts"
