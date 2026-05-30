@@ -61,3 +61,6 @@ See `docs/DEPLOYMENT_RUNBOOK.md` for VPS/Railway/Render/Oracle Free deployment p
 
 ## Moving computers
 See `NEW_COMPUTER_HANDOFF.md` for the full checklist to clone, restore `.env`, initialize the local database, verify the app, and keep secrets outside git.
+
+## Cloud connections
+See `CLOUD_CONNECTIONS.md` for the current GitHub, Supabase, and Vercel connection map.

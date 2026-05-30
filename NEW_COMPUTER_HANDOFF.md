@@ -197,6 +197,8 @@ Then open:
 http://localhost:8787/dashboard
 ```
 
+Check `CLOUD_CONNECTIONS.md` for the latest GitHub, Supabase, and Vercel account/project mapping.
+
 ## 12. Known Current Risk
 
 `npm audit --audit-level=moderate` currently reports one moderate issue in `@fastify/static`.
@@ -209,4 +211,3 @@ npm run test
 npm run build
 npm run check:health
 ```
-
